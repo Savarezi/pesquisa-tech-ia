@@ -1,0 +1,13 @@
+[
+    {
+        "nome": "Patricia",
+        "email": "patriciasavarezioliveira@gmail.com",
+        "idade": "35",
+        "cidade": "São Paulo",
+        "momento": "📚 Estudante",
+        "tempo_busca": "⌛ Mais de 6 meses",
+        "senioridade": "Júnior / Estagiário(a)",
+        "area": "🌐 Full Stack",
+        "opiniao_ia": "Acho o mercado de IA o mais promissor dos últimos 10 anos. As empresas pararam de testar e começaram a colocar IA em produção.\n\nHoje elas buscam devs que saibam conectar LLM com APIs, criar automações e entregar resultado rápido. Tem muita vaga, mas exige perfil que saiba codar e pensar em produto.\n\nPra quem está se especializando como eu, é o momento ideal. Quem aprende a aplicar IA no dia a dia vai sair na frente."
+    }
+]
