@@ -1,5 +1,3 @@
-import json
-import os
 import google.generativeai as genai
 import pandas as pd
 import streamlit as st
@@ -113,24 +111,24 @@ st.markdown(
 )
 st.markdown("---")
 
-ARQUIVO_JSON = "respostas.json"
+# Link da Planilha do Google Sheets fornecido
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1t7UbKfQA61zz7Xm_2x7AbwxieJmMoY_cIb9sN9N4upI/edit?usp=sharing"
 
 
 def carregar_dados():
-  if not os.path.exists(ARQUIVO_JSON):
-    return pd.DataFrame()
   try:
-    with open(ARQUIVO_JSON, "r", encoding="utf-8") as f:
-      conteudo = f.read().strip()
-      if not conteudo:
-        return pd.DataFrame()
-      dados = json.loads(conteudo)
-      if isinstance(dados, list):
-        return pd.DataFrame(dados)
-      elif isinstance(dados, dict):
-        return pd.DataFrame([dados])
+    if not SHEET_URL:
+      return pd.DataFrame()
+
+    # Transforma o link do Google Sheets em link de exportação CSV
+    csv_url = SHEET_URL
+    if "/edit" in SHEET_URL:
+      csv_url = SHEET_URL.rsplit("/edit", 1)[0] + "/export?format=csv"
+    
+    df = pd.read_csv(csv_url)
+    return df
   except Exception as e:
-    st.error(f"Erro ao ler os dados: {e}")
+    st.error(f"Erro ao ler os dados da planilha: {e}")
     return pd.DataFrame()
 
 
@@ -141,7 +139,7 @@ if df.empty:
       """
         <div style='text-align: center; padding: 50px; background: #0d1322; border-radius: 8px; border: 1px dashed #334155;'>
             <h3 style='font-family: Fira Code; color: #38bdf8;'>[ 404 ] Nenhum dado encontrado</h3>
-            <p style='color: #64748b; font-family: Fira Code;'>Aguardando payloads de respostas via Typebot...</p>
+            <p style='color: #64748b; font-family: Fira Code;'>Verifique se a planilha tem dados ou se está pública para leitura...</p>
         </div>
     """,
       unsafe_allow_html=True,
