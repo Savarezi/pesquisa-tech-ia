@@ -2,7 +2,7 @@ import google.generativeai as genai
 import pandas as pd
 import streamlit as st
 
-# Pega a chave direto do cofre de segredos do Streamlit
+# Pega a chave direto do cofre de segredos того Streamlit
 api_key = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=api_key)
@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="Painel de Análise de Dados", page_icon="💻", layout="wide"
 )
 
-# Estilização Dark Dev limpa e sem elementos brancos
+# Estilização Dark Dev limpa (com correção visual para o Selectbox/Dropdown)
 st.markdown(
     """
     <style>
@@ -94,6 +94,27 @@ st.markdown(
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 0.7rem;
+    }
+
+    /* --- CORREÇÃO E ESTILIZAÇÃO MODERNA DA LISTA SUSPENSA (SELECTBOX) --- */
+    div[data-baseweb="select"] > div {
+        background-color: #0d1322 !important;
+        border: 1px solid #1e293b !important;
+        color: #e2e8f0 !important;
+        border-radius: 6px !important;
+    }
+    div[data-baseweb="select"] span {
+        color: #e2e8f0 !important;
+    }
+    /* Estilo do menu suspenso aberto (Dropdown) */
+    div[data-baseweb="popover"], div[data-baseweb="menu"] {
+        background-color: #0d1322 !important;
+        border: 1px solid #334155 !important;
+    }
+    /* Cor ao passar o mouse nas opções da lista */
+    li[role="option"]:hover {
+        background-color: #1e293b !important;
+        color: #38bdf8 !important;
     }
     </style>
 """,
@@ -263,17 +284,22 @@ else:
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # --- TELEMETRIA EM CARDS DARK ---
+  # --- TELEMETRIA EM CARDS DARK (COM CONTAGEM POR SENIORIDADE) ---
   st.markdown(
       "<h3 style='font-family: Fira Code; color: #38bdf8; font-size:"
-      " 1.1rem;'>📊 Visão Geral do Status</h3>",
+      " 1.1rem;'>📊 Visão Geral do Status & Distribuição por Senioridade</h3>",
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Resumo estruturado de"
-      " fluxo e telemetria do sistema.</p>",
+      "<p style='color: #64748b; font-size: 0.85rem;'>Resumo estruturado de fluxo e contagem detalhada por nível técnico.</p>",
       unsafe_allow_html=True,
   )
+
+  # Calcula a contagem de cada senioridade presente na planilha
+  if "senioridade" in df.columns:
+    contagem_senioridade = df["senioridade"].value_counts()
+  else:
+    contagem_senioridade = pd.Series()
 
   col_t1, col_t2 = st.columns(2)
 
@@ -284,20 +310,25 @@ else:
             <div class="telemetry-title">// Fluxo de Entradas (Volume)</div>
             <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Status do Payload: <span style="color: #10b981;">[ OK ] Sincronizado</span></p>
             <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Total Registrado: <b style="color: #38bdf8;">{total_respostas} registro(s)</b></p>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Último ID na Fila: <b style="color: #c084fc;">#{total_respostas}</b></p>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Segmento Principal: <b style="color: #10b981;">{principal_area}</b></p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
   with col_t2:
+    linhas_senioridades = ""
+    if not contagem_senioridade.empty:
+      for nivel, qtd in contagem_senioridade.items():
+        linhas_senioridades += f'<p style="color: #94a3b8; font-size: 0.85rem; margin: 6px 0;">• {nivel}: <b style="color: #c084fc;">{qtd} participante(s)</b></p>'
+    else:
+      linhas_senioridades = '<p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Nenhum dado de senioridade registrado ainda.</p>'
+
     st.markdown(
         f"""
         <div class="telemetry-card">
-            <div class="telemetry-title">// Distribuição por Perfil (Senioridade)</div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Nível Predominante: <b style="color: #10b981;">{senioridade_comum}</b></p>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Segmento Principal: <b style="color: #38bdf8;">{principal_area}</b></p>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Integridade dos Dados: <span style="color: #10b981;">100% estruturados</span></p>
+            <div class="telemetry-title">// Contagem por Senioridade</div>
+            {linhas_senioridades}
         </div>
         """,
         unsafe_allow_html=True,
@@ -312,8 +343,7 @@ else:
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Cards compactos com as"
-      " respostas enviadas por cada participante.</p>",
+      "<p style='color: #64748b; font-size: 0.85rem;'>Cards compactos com as respostas enviadas por cada participante.</p>",
       unsafe_allow_html=True,
   )
 
