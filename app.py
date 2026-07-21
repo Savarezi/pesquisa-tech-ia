@@ -2,122 +2,281 @@ import google.generativeai as genai
 import pandas as pd
 import streamlit as st
 
-# Pega a chave direto do cofre de segredos того Streamlit
+# Pega a chave direto do cofre de segredos do Streamlit
 api_key = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=api_key)
 
 # Configuração da página
 st.set_page_config(
-    page_title="Painel de Análise de Dados", page_icon="💻", layout="wide"
+    page_title="Painel de Análise de Dados",
+    page_icon="💻",
+    layout="wide"
 )
 
-# Estilização Dark Dev limpa (com correção visual para o Selectbox/Dropdown)
+# Estilização visual moderna
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+    :root {
+        --bg-primary: #070b14;
+        --border: rgba(148, 163, 184, 0.14);
+        --text-primary: #f8fafc;
+        --green: #34d399;
+        --blue: #38bdf8;
+        --purple: #a78bfa;
+    }
 
     .stApp {
-        background-color: #090d16;
-        color: #e2e8f0;
-        font-family: 'Inter', sans-serif;
+        background:
+            radial-gradient(
+                circle at 10% 0%,
+                rgba(56, 189, 248, 0.08),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 90% 10%,
+                rgba(167, 139, 250, 0.08),
+                transparent 30%
+            ),
+            var(--bg-primary);
+
+        color: var(--text-primary);
+        font-family: 'DM Sans', sans-serif;
     }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
 
     .main-title {
-        font-family: 'Fira Code', monospace;
-        color: #f8fafc;
-        font-size: 2rem;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 2.5rem;
         font-weight: 700;
-        letter-spacing: -1px;
-    }
-    .main-title span {
-        color: #10b981;
+        letter-spacing: -1.5px;
+        color: #ffffff;
+        margin-bottom: 0;
     }
 
-    /* Cards de Métricas estilo Dev */
-    .metric-card {
-        background: #0d1322;
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 18px;
-        text-align: left;
-        font-family: 'Fira Code', monospace;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    .main-title span {
+        background: linear-gradient(
+            90deg,
+            #34d399,
+            #38bdf8,
+            #a78bfa
+        );
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
+
+    .metric-card {
+        position: relative;
+        overflow: hidden;
+
+        background: linear-gradient(
+            145deg,
+            rgba(17, 25, 40, 0.92),
+            rgba(10, 15, 27, 0.92)
+        );
+
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 24px;
+
+        box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+        transition: all 0.25s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+
+        border-color: rgba(56, 189, 248, 0.35);
+
+        box-shadow:
+            0 25px 50px rgba(0, 0, 0, 0.35),
+            0 0 25px rgba(56, 189, 248, 0.08);
+    }
+
     .metric-title {
-        font-size: 0.75rem;
         color: #64748b;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
+
     .metric-value {
-        font-size: 1.4rem;
-        font-weight: 600;
-        color: #10b981;
-        margin-top: 5px;
+        margin-top: 10px;
+
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+
+        color: var(--green);
     }
 
-    /* Cards de Status / Telemetria */
     .telemetry-card {
-        background: #0d1322;
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 20px;
-        font-family: 'Fira Code', monospace;
         height: 100%;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+        background: rgba(15, 23, 42, 0.72);
+
+        border: 1px solid var(--border);
+        border-radius: 18px;
+
+        padding: 24px;
+
+        backdrop-filter: blur(18px);
+
+        box-shadow:
+            0 18px 40px rgba(0, 0, 0, 0.22);
+
+        transition: all 0.25s ease;
     }
+
+    .telemetry-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(167, 139, 250, 0.3);
+    }
+
     .telemetry-title {
-        color: #38bdf8;
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-        border-bottom: 1px solid #1e293b;
-        padding-bottom: 8px;
+        color: var(--blue);
+
+        font-family: 'Space Mono', monospace;
+        font-size: 0.85rem;
+
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+
+        border-bottom: 1px solid var(--border);
     }
 
-    /* Card individual menor e mais organizado para cada Participante */
     .participante-card {
-        background: #0d1322;
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .dev-tag {
-        font-family: 'Fira Code', monospace;
-        background: #1e293b;
-        color: #38bdf8;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.7rem;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(17, 25, 40, 0.86),
+                rgba(10, 15, 27, 0.86)
+            );
+
+        border: 1px solid var(--border);
+        border-radius: 16px;
+
+        padding: 18px;
+        margin-bottom: 14px;
+
+        transition: all 0.25s ease;
     }
 
-    /* --- CORREÇÃO E ESTILIZAÇÃO MODERNA DA LISTA SUSPENSA (SELECTBOX) --- */
-    div[data-baseweb="select"] > div {
-        background-color: #0d1322 !important;
-        border: 1px solid #1e293b !important;
-        color: #e2e8f0 !important;
-        border-radius: 6px !important;
+    .participante-card:hover {
+        transform: translateX(5px);
+
+        border-color: rgba(52, 211, 153, 0.35);
+
+        box-shadow:
+            0 12px 30px rgba(0, 0, 0, 0.25);
     }
+
+    .dev-tag {
+        background: rgba(56, 189, 248, 0.1);
+
+        border: 1px solid rgba(56, 189, 248, 0.25);
+
+        color: var(--blue);
+
+        padding: 4px 9px;
+        border-radius: 999px;
+
+        font-family: 'Space Mono', monospace;
+        font-size: 0.68rem;
+    }
+
+    div[data-baseweb="select"] > div {
+        background: rgba(15, 23, 42, 0.85) !important;
+
+        border: 1px solid var(--border) !important;
+
+        border-radius: 12px !important;
+
+        min-height: 44px;
+
+        transition: all 0.2s ease;
+    }
+
+    div[data-baseweb="select"] > div:hover {
+        border-color: rgba(56, 189, 248, 0.5) !important;
+    }
+
     div[data-baseweb="select"] span {
         color: #e2e8f0 !important;
     }
-    /* Estilo do menu suspenso aberto (Dropdown) */
-    div[data-baseweb="popover"], div[data-baseweb="menu"] {
-        background-color: #0d1322 !important;
+
+    div[data-baseweb="popover"],
+    div[data-baseweb="menu"] {
+        background: #0f172a !important;
+
         border: 1px solid #334155 !important;
+
+        border-radius: 12px !important;
     }
-    /* Cor ao passar o mouse nas opções da lista */
+
     li[role="option"]:hover {
-        background-color: #1e293b !important;
+        background: rgba(56, 189, 248, 0.12) !important;
+
         color: #38bdf8 !important;
     }
+
+    .stButton > button {
+        border-radius: 10px;
+
+        border: 1px solid rgba(52, 211, 153, 0.35);
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(52, 211, 153, 0.18),
+                rgba(56, 189, 248, 0.12)
+            );
+
+        color: #f8fafc;
+
+        font-weight: 600;
+
+        transition: all 0.25s ease;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+
+        border-color: #34d399;
+
+        box-shadow:
+            0 8px 25px rgba(52, 211, 153, 0.18);
+    }
+
+    [data-testid="stExpander"] {
+        background: rgba(15, 23, 42, 0.65);
+
+        border: 1px solid var(--border);
+
+        border-radius: 16px;
+    }
+
+    hr {
+        border-color: rgba(148, 163, 184, 0.12);
+    }
+
     </style>
-""",
+    """,
     unsafe_allow_html=True,
 )
 
@@ -125,11 +284,13 @@ st.markdown(
     "<h1 class='main-title'>⚡ Painel <span>de Análise</span></h1>",
     unsafe_allow_html=True,
 )
+
 st.markdown(
-    "<p style='color: #64748b; font-family: Fira Code, monospace; font-size:"
+    "<p style='color: #64748b; font-family: Space Mono, monospace; font-size:"
     " 0.9rem;'>// Inteligência de dados e feedback de participantes</p>",
     unsafe_allow_html=True,
 )
+
 st.markdown("---")
 
 # Link da Planilha do Google Sheets fornecido
@@ -137,244 +298,586 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1t7UbKfQA61zz7Xm_2x7AbwxieJm
 
 
 def carregar_dados():
-  try:
-    if not SHEET_URL:
-      return pd.DataFrame()
+    try:
+        if not SHEET_URL:
+            return pd.DataFrame()
 
-    # Transforma o link do Google Sheets em link de exportação CSV
-    csv_url = SHEET_URL
-    if "/edit" in SHEET_URL:
-      csv_url = SHEET_URL.rsplit("/edit", 1)[0] + "/export?format=csv"
-    
-    df = pd.read_csv(csv_url)
-    return df
-  except Exception as e:
-    st.error(f"Erro ao ler os dados da planilha: {e}")
-    return pd.DataFrame()
+        # Transforma o link do Google Sheets em link de exportação CSV
+        csv_url = SHEET_URL
+
+        if "/edit" in SHEET_URL:
+            csv_url = SHEET_URL.rsplit("/edit", 1)[0] + "/export?format=csv"
+
+        df = pd.read_csv(csv_url)
+
+        return df
+
+    except Exception as e:
+        st.error(f"Erro ao ler os dados da planilha: {e}")
+        return pd.DataFrame()
 
 
 df = carregar_dados()
 
 if df.empty:
-  st.markdown(
-      """
-        <div style='text-align: center; padding: 50px; background: #0d1322; border-radius: 8px; border: 1px dashed #334155;'>
-            <h3 style='font-family: Fira Code; color: #38bdf8;'>[ 404 ] Nenhum dado encontrado</h3>
-            <p style='color: #64748b; font-family: Fira Code;'>Verifique se a planilha tem dados ou se está pública para leitura...</p>
+
+    st.markdown(
+        """
+        <div style='
+            text-align: center;
+            padding: 50px;
+            background: #0d1322;
+            border-radius: 16px;
+            border: 1px dashed #334155;
+        '>
+
+            <h3 style='
+                font-family: Space Mono;
+                color: #38bdf8;
+            '>
+                [ 404 ] Nenhum dado encontrado
+            </h3>
+
+            <p style='
+                color: #64748b;
+                font-family: Space Mono;
+            '>
+                Verifique se a planilha tem dados ou se está pública para leitura...
+            </p>
+
         </div>
-    """,
-      unsafe_allow_html=True,
-  )
+        """,
+        unsafe_allow_html=True,
+    )
+
 else:
-  total_respostas = len(df)
-  principal_area = (
-      df["area"].mode()[0] if "area" in df.columns and not df.empty else "N/A"
-  )
-  senioridade_comum = (
-      df["senioridade"].mode()[0]
-      if "senioridade" in df.columns and not df.empty
-      else "N/A"
-  )
 
-  # Métricas principais no topo
-  m1, m2, m3 = st.columns(3)
-  with m1:
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-title">// total_respostas</div>
-            <div class="metric-value">{total_respostas}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-  with m2:
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-title">// area_principal</div>
-            <div class="metric-value" style="font-size: 1.1rem; color: #38bdf8;">{principal_area}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-  with m3:
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-title">// senioridade_mode</div>
-            <div class="metric-value" style="font-size: 1.1rem; color: #c084fc;">{senioridade_comum}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    total_respostas = len(df)
+
+    principal_area = (
+        df["area"].mode()[0]
+        if "area" in df.columns and not df.empty
+        else "N/A"
     )
 
-  st.markdown("<br>", unsafe_allow_html=True)
-
-  # --- ANÁLISE DA IA COM FILTRO POR NOME DO PARTICIPANTE ---
-  with st.expander(
-      "🤖 [ Central de Análise Inteligente com Filtro por Participante ]",
-      expanded=False,
-  ):
-    st.markdown(
-        "<p style='color: #94a3b8; font-size: 0.85rem;'>Selecione um"
-        " participante específico para gerar a análise focada na resposta"
-        " dele:</p>",
-        unsafe_allow_html=True,
+    senioridade_comum = (
+        df["senioridade"].mode()[0]
+        if "senioridade" in df.columns and not df.empty
+        else "N/A"
     )
 
-    lista_nomes = (
-        df["nome"].tolist() if "nome" in df.columns else ["Participante"]
-    )
-    opcoes_filtro = ["🌐 Analisar Geral (Todas as Respostas)"] + lista_nomes
-    participante_selecionado = st.selectbox(
-        "Filtrar Análise por Participante:", opcoes_filtro
-    )
+    # Métricas principais no topo
+    m1, m2, m3 = st.columns(3)
 
-    if st.button("🚀 Processar Análise com IA", type="primary"):
-      if not api_key or api_key == "SUA_CHAVE_AQUI":
-        st.error("⚠️ Insira sua chave da API do Gemini no código.")
-      else:
-        with st.spinner(
-            f"Gerando insights para: {participante_selecionado}..."
+    with m1:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    // total_respostas
+                </div>
+
+                <div class="metric-value">
+                    {total_respostas}
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with m2:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    // area_principal
+                </div>
+
+                <div
+                    class="metric-value"
+                    style="font-size: 1.1rem; color: #38bdf8;"
+                >
+                    {principal_area}
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with m3:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    // senioridade_mode
+                </div>
+
+                <div
+                    class="metric-value"
+                    style="font-size: 1.1rem; color: #c084fc;"
+                >
+                    {senioridade_comum}
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Análise da IA com filtro por participante
+    with st.expander(
+        "🤖 [ Central de Análise Inteligente com Filtro por Participante ]",
+        expanded=False,
+    ):
+
+        st.markdown(
+            "<p style='color: #94a3b8; font-size: 0.85rem;'>Selecione um"
+            " participante específico para gerar a análise focada na resposta"
+            " dele:</p>",
+            unsafe_allow_html=True,
+        )
+
+        lista_nomes = (
+            df["nome"].tolist()
+            if "nome" in df.columns
+            else ["Participante"]
+        )
+
+        opcoes_filtro = [
+            "🌐 Analisar Geral (Todas as Respostas)"
+        ] + lista_nomes
+
+        participante_selecionado = st.selectbox(
+            "Filtrar Análise por Participante:",
+            opcoes_filtro
+        )
+
+        if st.button(
+            "🚀 Processar Análise com IA",
+            type="primary"
         ):
-          try:
-            if participante_selecionado == "🌐 Analisar Geral (Todas as Respostas)":
-              dados_participantes = []
-              for _, row in df.iterrows():
-                n = row.get("nome", "Participante")
-                op = row.get("opiniao_ia", "")
-                dados_participantes.append(f"Nome: {n} | Opinião: {op}")
-              texto_dados = "\n".join(dados_participantes)
-              prompt_ia = (
-                  "Aja como um analista tech sênior. Resuma de forma direta"
-                  " e limpa os pontos principais destas opiniões gerais de"
-                  f" todos os participantes:\n\n{texto_dados}"
-              )
+
+            if not api_key or api_key == "SUA_CHAVE_AQUI":
+
+                st.error(
+                    "⚠️ Insira sua chave da API do Gemini no código."
+                )
+
             else:
-              linha_filtrada = df[
-                  df["nome"] == participante_selecionado
-              ].iloc[0]
-              n = linha_filtrada.get("nome", "Participante")
-              area = linha_filtrada.get("area", "")
-              senioridade = linha_filtrada.get("senioridade", "")
-              opiniao = linha_filtrada.get("opiniao_ia", "")
 
-              prompt_ia = (
-                  "Aja como um analista tech sênior. Faça uma análise crítica,"
-                  " técnica e executiva focada exclusivamente na resposta e"
-                  f" perfil deste participante:\n- Nome: {n}\n- Área:"
-                  f" {area}\n- Senioridade: {senioridade}\n- Opinião/Resposta"
-                  f" enviada: {opiniao}"
-              )
+                with st.spinner(
+                    f"Gerando insights para: {participante_selecionado}..."
+                ):
 
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            response = model.generate_content(prompt_ia)
+                    try:
 
-            st.markdown(
-                f"<div"
-                f" style='background:#020617;padding:15px;border-radius:6px;border:1px"
-                f" solid #334155;color:#f8fafc; margin-top: 10px;'><b"
-                f" style='color:#10b981;'>Análise para: "
-                f"{participante_selecionado}</b><br><br>{response.text}</div>",
-                unsafe_allow_html=True,
-            )
-          except Exception as e:
-            st.error(f"Erro ao conectar com a IA: {e}")
+                        if participante_selecionado == "🌐 Analisar Geral (Todas as Respostas)":
 
-  st.markdown("<br>", unsafe_allow_html=True)
+                            dados_participantes = []
 
-  # --- TELEMETRIA EM CARDS DARK (COM CONTAGEM POR SENIORIDADE) ---
-  st.markdown(
-      "<h3 style='font-family: Fira Code; color: #38bdf8; font-size:"
-      " 1.1rem;'>📊 Visão Geral do Status & Distribuição por Senioridade</h3>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Resumo estruturado de fluxo e contagem detalhada por nível técnico.</p>",
-      unsafe_allow_html=True,
-  )
+                            for _, row in df.iterrows():
 
-  # Calcula a contagem de cada senioridade presente na planilha
-  if "senioridade" in df.columns:
-    contagem_senioridade = df["senioridade"].value_counts()
-  else:
-    contagem_senioridade = pd.Series()
+                                n = row.get(
+                                    "nome",
+                                    "Participante"
+                                )
 
-  col_t1, col_t2 = st.columns(2)
+                                op = row.get(
+                                    "opiniao_ia",
+                                    ""
+                                )
 
-  with col_t1:
+                                dados_participantes.append(
+                                    f"Nome: {n} | Opinião: {op}"
+                                )
+
+                            texto_dados = "\n".join(
+                                dados_participantes
+                            )
+
+                            prompt_ia = (
+                                "Aja como um analista tech sênior. Resuma de forma direta"
+                                " e limpa os pontos principais destas opiniões gerais de"
+                                f" todos os participantes:\n\n{texto_dados}"
+                            )
+
+                        else:
+
+                            linha_filtrada = df[
+                                df["nome"] == participante_selecionado
+                            ].iloc[0]
+
+                            n = linha_filtrada.get(
+                                "nome",
+                                "Participante"
+                            )
+
+                            area = linha_filtrada.get(
+                                "area",
+                                ""
+                            )
+
+                            senioridade = linha_filtrada.get(
+                                "senioridade",
+                                ""
+                            )
+
+                            opiniao = linha_filtrada.get(
+                                "opiniao_ia",
+                                ""
+                            )
+
+                            prompt_ia = (
+                                "Aja como um analista tech sênior. Faça uma análise crítica,"
+                                " técnica e executiva focada exclusivamente na resposta e"
+                                f" perfil deste participante:\n- Nome: {n}\n- Área:"
+                                f" {area}\n- Senioridade: {senioridade}\n- Opinião/Resposta"
+                                f" enviada: {opiniao}"
+                            )
+
+                        model = genai.GenerativeModel(
+                            "gemini-2.5-flash"
+                        )
+
+                        response = model.generate_content(
+                            prompt_ia
+                        )
+
+                        st.markdown(
+                            f"""
+                            <div
+                                style='
+                                    background:
+                                        linear-gradient(
+                                            145deg,
+                                            rgba(17, 25, 40, 0.95),
+                                            rgba(2, 6, 23, 0.95)
+                                        );
+
+                                    padding: 20px;
+
+                                    border-radius: 16px;
+
+                                    border: 1px solid rgba(
+                                        56,
+                                        189,
+                                        248,
+                                        0.18
+                                    );
+
+                                    color: #f8fafc;
+
+                                    margin-top: 10px;
+
+                                    box-shadow:
+                                        0 15px 35px rgba(
+                                            0,
+                                            0,
+                                            0,
+                                            0.25
+                                        );
+                                '
+                            >
+
+                                <b style='color:#34d399;'>
+                                    Análise para:
+                                    {participante_selecionado}
+                                </b>
+
+                                <br><br>
+
+                                {response.text}
+
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                    except Exception as e:
+
+                        st.error(
+                            f"Erro ao conectar com a IA: {e}"
+                        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Telemetria em cards dark
     st.markdown(
-        f"""
-        <div class="telemetry-card">
-            <div class="telemetry-title">// Fluxo de Entradas (Volume)</div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Status do Payload: <span style="color: #10b981;">[ OK ] Sincronizado</span></p>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Total Registrado: <b style="color: #38bdf8;">{total_respostas} registro(s)</b></p>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Segmento Principal: <b style="color: #10b981;">{principal_area}</b></p>
-        </div>
-        """,
+        "<h3 style='font-family: Space Mono; color: #38bdf8; font-size:"
+        " 1.1rem;'>📊 Visão Geral do Status & Distribuição por Senioridade</h3>",
         unsafe_allow_html=True,
     )
 
-  with col_t2:
-    linhas_senioridades = ""
-    if not contagem_senioridade.empty:
-      for nivel, qtd in contagem_senioridade.items():
-        linhas_senioridades += f'<p style="color: #94a3b8; font-size: 0.85rem; margin: 6px 0;">• {nivel}: <b style="color: #c084fc;">{qtd} participante(s)</b></p>'
+    st.markdown(
+        "<p style='color: #64748b; font-size: 0.85rem;'>Resumo estruturado de fluxo e contagem detalhada por nível técnico.</p>",
+        unsafe_allow_html=True,
+    )
+
+    # Calcula a contagem de cada senioridade presente na planilha
+    if "senioridade" in df.columns:
+
+        contagem_senioridade = df["senioridade"].value_counts()
+
     else:
-      linhas_senioridades = '<p style="color: #94a3b8; font-size: 0.85rem; margin: 8px 0;">Nenhum dado de senioridade registrado ainda.</p>'
 
+        contagem_senioridade = pd.Series()
+
+    col_t1, col_t2 = st.columns(2)
+
+    with col_t1:
+
+        st.markdown(
+            f"""
+            <div class="telemetry-card">
+
+                <div class="telemetry-title">
+                    // Fluxo de Entradas (Volume)
+                </div>
+
+                <p style='
+                    color: #94a3b8;
+                    font-size: 0.85rem;
+                    margin: 8px 0;
+                '>
+
+                    Status do Payload:
+
+                    <span style='color: #34d399;'>
+                        [ OK ] Sincronizado
+                    </span>
+
+                </p>
+
+                <p style='
+                    color: #94a3b8;
+                    font-size: 0.85rem;
+                    margin: 8px 0;
+                '>
+
+                    Total Registrado:
+
+                    <b style='color: #38bdf8;'>
+                        {total_respostas} registro(s)
+                    </b>
+
+                </p>
+
+                <p style='
+                    color: #94a3b8;
+                    font-size: 0.85rem;
+                    margin: 8px 0;
+                '>
+
+                    Segmento Principal:
+
+                    <b style='color: #34d399;'>
+                        {principal_area}
+                    </b>
+
+                </p>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_t2:
+
+        linhas_senioridades = ""
+
+        if not contagem_senioridade.empty:
+
+            for nivel, qtd in contagem_senioridade.items():
+
+                linhas_senioridades += f"""
+                <p style="
+                    color: #94a3b8;
+                    font-size: 0.85rem;
+                    margin: 6px 0;
+                ">
+
+                    • {nivel}:
+
+                    <b style="color: #c084fc;">
+                        {qtd} participante(s)
+                    </b>
+
+                </p>
+                """
+
+        else:
+
+            linhas_senioridades = """
+            <p style="
+                color: #94a3b8;
+                font-size: 0.85rem;
+                margin: 8px 0;
+            ">
+
+                Nenhum dado de senioridade registrado ainda.
+
+            </p>
+            """
+
+        st.markdown(
+            f"""
+            <div class="telemetry-card">
+
+                <div class="telemetry-title">
+                    // Contagem por Senioridade
+                </div>
+
+                {linhas_senioridades}
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+
+    # Cards individuais dos participantes
     st.markdown(
-        f"""
-        <div class="telemetry-card">
-            <div class="telemetry-title">// Contagem por Senioridade</div>
-            {linhas_senioridades}
-        </div>
-        """,
+        "<h3 style='font-family: Space Mono; color: #38bdf8; font-size:"
+        " 1.1rem;'>👥 Feed de Participantes</h3>",
         unsafe_allow_html=True,
     )
 
-  st.markdown("---")
-
-  # --- CARDS INDIVIDUAIS DOS PARTICIPANTES (MENORES E ORGANIZADOS) ---
-  st.markdown(
-      "<h3 style='font-family: Fira Code; color: #38bdf8; font-size:"
-      " 1.1rem;'>👥 Feed de Participantes</h3>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Cards compactos com as respostas enviadas por cada participante.</p>",
-      unsafe_allow_html=True,
-  )
-
-  for index, row in df.iterrows():
-    nome_pessoa = row.get("nome", f"Participante {index + 1}")
-    email_pessoa = row.get("email", "Não informado")
-    cidade_pessoa = row.get("cidade", "Não informada")
-    area_pessoa = row.get("area", "Não informada")
-    senioridade_pessoa = row.get("senioridade", "Não informada")
-    opiniao_pessoa = row.get(
-        "opiniao_ia", "Nenhuma opinião detalhada fornecida."
-    )
-
     st.markdown(
-        f"""
-        <div class="participante-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-family: Fira Code; color: #10b981; font-size: 0.95rem; font-weight: 600;">👤 {nome_pessoa}</span>
-                <span class="dev-tag">id_#{index + 1}</span>
-            </div>
-            <div style="color: #94a3b8; font-size: 0.78rem; margin-bottom: 6px;">
-                <span><b>Email:</b> {email_pessoa}</span> | 
-                <span><b>Local:</b> {cidade_pessoa}</span> | 
-                <span><b>Área:</b> {area_pessoa}</span> | 
-                <span><b>Senioridade:</b> {senioridade_pessoa}</span>
-            </div>
-            <div style="color: #e2e8f0; background: #020617; padding: 8px 10px; border-radius: 4px; border: 1px solid #1e293b; font-size: 0.82rem; white-space: pre-wrap;">
-                <span style="color: #64748b; font-size: 0.68rem; text-transform: uppercase; font-family: Fira Code; display: block; margin-bottom: 2px;">Opinião Registrada:</span>
-                {opiniao_pessoa}
-            </div>
-        </div>
-        """,
+        "<p style='color: #64748b; font-size: 0.85rem;'>Cards compactos com as respostas enviadas por cada participante.</p>",
         unsafe_allow_html=True,
     )
+
+    for index, row in df.iterrows():
+
+        nome_pessoa = row.get(
+            "nome",
+            f"Participante {index + 1}"
+        )
+
+        email_pessoa = row.get(
+            "email",
+            "Não informado"
+        )
+
+        cidade_pessoa = row.get(
+            "cidade",
+            "Não informada"
+        )
+
+        area_pessoa = row.get(
+            "area",
+            "Não informada"
+        )
+
+        senioridade_pessoa = row.get(
+            "senioridade",
+            "Não informada"
+        )
+
+        opiniao_pessoa = row.get(
+            "opiniao_ia",
+            "Nenhuma opinião detalhada fornecida."
+        )
+
+        st.markdown(
+            f"""
+            <div class="participante-card">
+
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                ">
+
+                    <span style="
+                        font-family: 'DM Sans';
+                        color: #34d399;
+                        font-size: 1rem;
+                        font-weight: 700;
+                    ">
+
+                        👤 {nome_pessoa}
+
+                    </span>
+
+                    <span class="dev-tag">
+                        id_#{index + 1}
+                    </span>
+
+                </div>
+
+                <div style="
+                    color: #94a3b8;
+                    font-size: 0.78rem;
+                    margin-bottom: 10px;
+                    line-height: 1.8;
+                ">
+
+                    <span>
+                        <b>Email:</b> {email_pessoa}
+                    </span>
+
+                    &nbsp; | &nbsp;
+
+                    <span>
+                        <b>Local:</b> {cidade_pessoa}
+                    </span>
+
+                    &nbsp; | &nbsp;
+
+                    <span>
+                        <b>Área:</b> {area_pessoa}
+                    </span>
+
+                    &nbsp; | &nbsp;
+
+                    <span>
+                        <b>Senioridade:</b> {senioridade_pessoa}
+                    </span>
+
+                </div>
+
+                <div style="
+                    color: #e2e8f0;
+                    background: rgba(2, 6, 23, 0.75);
+                    padding: 12px 14px;
+                    border-radius: 10px;
+                    border: 1px solid rgba(148, 163, 184, 0.1);
+                    font-size: 0.82rem;
+                    white-space: pre-wrap;
+                    line-height: 1.6;
+                ">
+
+                    <span style="
+                        color: #64748b;
+                        font-size: 0.68rem;
+                        text-transform: uppercase;
+                        font-family: 'Space Mono';
+                        display: block;
+                        margin-bottom: 4px;
+                    ">
+
+                        Opinião Registrada:
+
+                    </span>
+
+                    {opiniao_pessoa}
+
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
