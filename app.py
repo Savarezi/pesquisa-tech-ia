@@ -4,27 +4,14 @@ import google.generativeai as genai
 import pandas as pd
 import streamlit as st
 
-
-
-
-
 # Pega a chave direto do cofre de segredos do Streamlit
 api_key = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=api_key)
-# ==========================================
-# INSIRA SUA CHAVE DA API DO GEMINI AQUI:
-# ==========================================
-
-
-# Configura a chave
-api_key = os.environ.get("GEMINI_API_KEY") or SUA_CHAVE_API
-if api_key and api_key != "SUA_CHAVE_AQUI":
-  genai.configure(api_key=api_key)
 
 # Configuração da página
 st.set_page_config(
-    page_title="CyberTech | Dev Dark Terminal", page_icon="💻", layout="wide"
+    page_title="Painel de Análise de Dados", page_icon="💻", layout="wide"
 )
 
 # Estilização Dark Dev limpa e sem elementos brancos
@@ -40,19 +27,6 @@ st.markdown(
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-
-    /* Topo estilo Terminal / IDE */
-    .dev-header {
-        font-family: 'Fira Code', monospace;
-        background: #0d1322;
-        border: 1px solid #1e293b;
-        border-left: 4px solid #10b981;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: #38bdf8;
-        font-size: 0.95rem;
-        margin-bottom: 25px;
-    }
 
     .main-title {
         font-family: 'Fira Code', monospace;
@@ -88,7 +62,7 @@ st.markdown(
         margin-top: 5px;
     }
 
-    /* Cards de Status / Telemetria no lugar do gráfico */
+    /* Cards de Status / Telemetria */
     .telemetry-card {
         background: #0d1322;
         border: 1px solid #1e293b;
@@ -106,14 +80,14 @@ st.markdown(
         padding-bottom: 8px;
     }
 
-    /* Card individual para cada Participante */
+    /* Card individual menor e mais organizado para cada Participante */
     .participante-card {
         background: #0d1322;
         border: 1px solid #1e293b;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .dev-tag {
         font-family: 'Fira Code', monospace;
@@ -128,24 +102,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Cabeçalho estilo Terminal
 st.markdown(
-    """
-    <div class="dev-header">
-        root@cybertech-ai:~# ./initialize_dashboard.sh --env=production --theme=dark-dev
-    </div>
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    "<h1 class='main-title'>⚡ cybertech<span>.analytics</span>()</h1>",
+    "<h1 class='main-title'>⚡ Painel <span>de Análise</span></h1>",
     unsafe_allow_html=True,
 )
 st.markdown(
     "<p style='color: #64748b; font-family: Fira Code, monospace; font-size:"
-    " 0.9rem;'>// Painel de inteligência de dados e feedback de"
-    " participantes</p>",
+    " 0.9rem;'>// Inteligência de dados e feedback de participantes</p>",
     unsafe_allow_html=True,
 )
 st.markdown("---")
@@ -172,14 +135,6 @@ def carregar_dados():
 
 
 df = carregar_dados()
-
-# Botão de Reset discreto no topo
-col_top1, col_top2 = st.columns([6, 1])
-with col_top2:
-  if st.button("🗑️ Resetar", use_container_width=True):
-    with open(ARQUIVO_JSON, "w", encoding="utf-8") as f:
-      json.dump([], f)
-    st.rerun()
 
 if df.empty:
   st.markdown(
@@ -278,9 +233,10 @@ else:
                   f" todos os participantes:\n\n{texto_dados}"
               )
             else:
-              linha_filtrada = df[df["nome"] == participante_selecionado].iloc[0]
+              linha_filtrada = df[
+                  df["nome"] == participante_selecionado
+              ].iloc[0]
               n = linha_filtrada.get("nome", "Participante")
-              email = linha_filtrada.get("email", "")
               area = linha_filtrada.get("area", "")
               senioridade = linha_filtrada.get("senioridade", "")
               opiniao = linha_filtrada.get("opiniao_ia", "")
@@ -309,10 +265,10 @@ else:
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # --- TELEMETRIA EM CARDS DARK (Substituindo os gráficos feios) ---
+  # --- TELEMETRIA EM CARDS DARK ---
   st.markdown(
       "<h3 style='font-family: Fira Code; color: #38bdf8; font-size:"
-      " 1.1rem;'>📊 telemetry.status_overview()</h3>",
+      " 1.1rem;'>📊 Visão Geral do Status</h3>",
       unsafe_allow_html=True,
   )
   st.markdown(
@@ -351,14 +307,14 @@ else:
 
   st.markdown("---")
 
-  # --- CARDS INDIVIDUAIS DOS PARTICIPANTES ---
+  # --- CARDS INDIVIDUAIS DOS PARTICIPANTES (MENORES E ORGANIZADOS) ---
   st.markdown(
       "<h3 style='font-family: Fira Code; color: #38bdf8; font-size:"
-      " 1.1rem;'>👥 participantes.feed()</h3>",
+      " 1.1rem;'>👥 Feed de Participantes</h3>",
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Cards individuais com as"
+      "<p style='color: #64748b; font-size: 0.85rem;'>Cards compactos com as"
       " respostas enviadas por cada participante.</p>",
       unsafe_allow_html=True,
   )
@@ -376,15 +332,20 @@ else:
     st.markdown(
         f"""
         <div class="participante-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h4 style="font-family: Fira Code; color: #10b981; margin: 0; font-size: 1.05rem;">👤 {nome_pessoa}</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-family: Fira Code; color: #10b981; font-size: 0.95rem; font-weight: 600;">👤 {nome_pessoa}</span>
                 <span class="dev-tag">id_#{index + 1}</span>
             </div>
-            <p style="color: #94a3b8; font-size: 0.82rem; margin: 2px 0;"><b>Email:</b> {email_pessoa}</p>
-            <p style="color: #94a3b8; font-size: 0.82rem; margin: 2px 0;"><b>Local:</b> {cidade_pessoa} | <b>Área:</b> {area_pessoa} | <b>Senioridade:</b> {senioridade_pessoa}</p>
-            <hr style="border-color: #1e293b; margin: 8px 0;">
-            <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase; font-family: Fira Code;"><b>Opinião Registrada:</b></p>
-            <p style="color: #e2e8f0; background: #020617; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; font-size: 0.88rem; white-space: pre-wrap; margin-bottom: 0;">{opiniao_pessoa}</p>
+            <div style="color: #94a3b8; font-size: 0.78rem; margin-bottom: 6px;">
+                <span><b>Email:</b> {email_pessoa}</span> | 
+                <span><b>Local:</b> {cidade_pessoa}</span> | 
+                <span><b>Área:</b> {area_pessoa}</span> | 
+                <span><b>Senioridade:</b> {senioridade_pessoa}</span>
+            </div>
+            <div style="color: #e2e8f0; background: #020617; padding: 8px 10px; border-radius: 4px; border: 1px solid #1e293b; font-size: 0.82rem; white-space: pre-wrap;">
+                <span style="color: #64748b; font-size: 0.68rem; text-transform: uppercase; font-family: Fira Code; display: block; margin-bottom: 2px;">Opinião Registrada:</span>
+                {opiniao_pessoa}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
